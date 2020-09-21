@@ -13,6 +13,7 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
+from datetime import datetime
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -78,6 +79,7 @@ class Show(db.Model):
                           nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'),
                          nullable=False)
+    start_time = db.Column(db.DateTime, default=datetime.today())
 
 
 class Genre(db.Model):
