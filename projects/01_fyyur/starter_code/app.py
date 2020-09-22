@@ -286,7 +286,6 @@ def show_venue(venue_id):
         "upcoming_shows_count": 1,
     }
 
-
     return render_template('pages/show_venue.html', venue=data)
 
 #  Create Venue
@@ -340,10 +339,7 @@ def create_venue_submission():
     else:
         flash('Please! fill all fields with the correct format')
 
-        for fieldName, errorMessages in form.errors.items():
-            for err in errorMessages:
-                flash(fieldName, err)
-                print(fieldName, err)
+        flash(form.errors)
 
         return render_template('forms/new_venue.html', form=form)
 
@@ -509,7 +505,9 @@ def show_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    form = ArtistForm()
+    artist = Artist.query.get(artist_id)
+    form = ArtistForm(obj=artist)
+    '''
     artist = {
         "id": 4,
         "name": "Guns N Petals",
@@ -523,6 +521,7 @@ def edit_artist(artist_id):
         "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
         "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
     }
+    '''
     # TODO: populate form with fields from artist with ID <artist_id>
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
@@ -531,13 +530,51 @@ def edit_artist(artist_id):
 def edit_artist_submission(artist_id):
     # TODO: take values from the form submitted, and update existing
     # artist record with ID <artist_id> using the new attributes
+    artist = Artist.query.get(artist_id)
+    form = ArtistForm()
+    error = False
 
+    if form.validate_on_submit():
+        try:
+            artist.name = form.name.data
+            artist.city = form.city.data
+            artist.state = form.state.data
+            artist.phone = form.phone.data
+            artist.genres = form.genres.data
+            artist.seeking_venue = form.seeking_venue.data
+            artist.seeking_description = form.seeking_description.data
+            artist.image_link = form.image_link.data
+            artist.website = form.website.data
+            artist.facebook_link = form.facebook_link.data
+
+            db.session.commit()
+        except:
+            error = True
+            print(sys.exc_info())
+            db.session.rollback()
+        finally:
+            db.session.close()
+            if error:
+                flash(
+                    'An error occurred. Artist '
+                    + request.form['name']
+                    + ' could not be listed.'
+                )
+            else:
+                flash('Artist ' +
+                      request.form['name'] + ' was successfully listed!')
+    else:
+        flash('please fill the fields with the correct format')
+        flash(form.errors)
+        return render_template('forms/edit_artist.html', form=form, artist=artist)
     return redirect(url_for('show_artist', artist_id=artist_id))
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-    form = VenueForm()
+    venue = Venue.query.get(venue_id)
+    form = VenueForm(obj=venue)
+    '''
     venue = {
         "id": 1,
         "name": "The Musical Hop",
@@ -552,6 +589,7 @@ def edit_venue(venue_id):
         "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
         "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
     }
+    '''
     # TODO: populate form with values from venue with ID <venue_id>
     return render_template('forms/edit_venue.html', form=form, venue=venue)
 
@@ -560,6 +598,44 @@ def edit_venue(venue_id):
 def edit_venue_submission(venue_id):
     # TODO: take values from the form submitted, and update existing
     # venue record with ID <venue_id> using the new attributes
+    venue = Venue.query.get(venue_id)
+    form = VenueForm()
+    error = False
+
+    if form.validate_on_submit():
+        try:
+            venue.name = form.name.data
+            venue.city = form.city.data
+            venue.state = form.state.data
+            venue.address = form.address.data
+            venue.phone = form.phone.data
+            venue.genres = form.genres.data
+            venue.seeking_talent = form.seeking_talent.data
+            venue.seeking_description = form.seeking_description.data
+            venue.image_link = form.image_link.data
+            venue.website = form.website.data
+            venue.facebook_link = form.facebook_link.data
+
+            db.session.commit()
+        except:
+            error = True
+            print(sys.exc_info())
+            db.session.rollback()
+        finally:
+            db.session.close()
+            if error:
+                flash(
+                    'An error occurred. Venue '
+                    + request.form['name']
+                    + ' could not be listed.'
+                )
+            else:
+                flash(
+                    'Venue ' + request.form['name'] + ' was successfully edited!')
+    else:
+        flash('please fill the fields with the correct format')
+        flash(form.errors)
+        return render_template('forms/edit_venue.html', form=form, venue=venue)
     return redirect(url_for('show_venue', venue_id=venue_id))
 
 #  Create Artist
@@ -611,10 +687,7 @@ def create_artist_submission():
                       request.form['name'] + ' was successfully listed!')
     else:
         flash('Please! fill all fields with the correct format')
-        for fieldName, errorMessages in form.errors.items():
-            for err in errorMessages:
-                flash(fieldName, err)
-                print(fieldName, err)
+        flash(form.errors)
         return render_template('forms/new_artist.html', form=form)
 
     return redirect(url_for('index'))
