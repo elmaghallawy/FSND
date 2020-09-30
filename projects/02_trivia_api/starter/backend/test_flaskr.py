@@ -66,6 +66,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'resource not found')
 
     def test_create_question(self):
+        """Test creating a new question"""
         res = self.client().post('/questions', json=self.new_question)
         data = json.loads(res.data)
 
@@ -74,6 +75,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['created'])
 
     def test_question_id_405(self):
+        """Test return a 405 error code for not allowed method on questions/question_id """
         res = self.client().post('/questions/45', json=self.new_question)
         data = json.loads(res.data)
 
@@ -82,6 +84,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'method not allowed')
 
     def test_question_search_with_results(self):
+        """Test getting a list of matched questions thourgh search endpoint"""
         res = self.client().post('/questions/search',
                                  json={'searchTerm': 'title'})
         data = json.loads(res.data)
@@ -91,6 +94,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(len(data['questions']), 2)
 
     def test_question_search_without_results(self):
+        """Testing getting no results for the search """
         res = self.client().post('/questions/search',
                                  json={'searchTerm': 'efasdgderdav'})
         data = json.loads(res.data)
@@ -100,6 +104,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(len(data['questions']), 0)
 
     def test_question_delete(self):
+        """Test deleting questions"""
         res = self.client().delete('/questions/20')
         data = json.loads(res.data)
 
@@ -111,6 +116,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(question, None)
 
     def test_question_delete_422(self):
+        """Test raising a 422 error"""
         res = self.client().delete('/questions/1')
         data = json.loads(res.data)
 
@@ -119,6 +125,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'unprocessable')
 
     def test_quiz_play(self):
+        """test playing the quiz """
         res = self.client().post('/quizzes', json={
             "previous_questions": [],
             "quiz_category": '1'
@@ -130,6 +137,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['question'])
 
     def test_quiz_no_questions(self):
+        """Test playing the quiz with no questions remaining in the requested category"""
         res = self.client().post('/quizzes', json={
             "previous_questions": [20, 21, 22, 7],
             "quiz_category": '1'
