@@ -128,7 +128,7 @@ class TriviaTestCase(unittest.TestCase):
         """test playing the quiz """
         res = self.client().post('/quizzes', json={
             "previous_questions": [],
-            "quiz_category": '1'
+            "quiz_category": {'id': '1'}
         })
         data = json.loads(res.data)
 
@@ -140,7 +140,7 @@ class TriviaTestCase(unittest.TestCase):
         """Test playing the quiz with no questions remaining in the requested category"""
         res = self.client().post('/quizzes', json={
             "previous_questions": [20, 21, 22, 7],
-            "quiz_category": '1'
+            "quiz_category": {'id': '1'}
         })
         data = json.loads(res.data)
 
