@@ -11,6 +11,26 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 
+def paginate_questions(request, queryset):
+    """helper function that paginates questions
+        or any queryset that has formate to json method
+
+        Args:
+            request : flask request object
+            queryset : sqlalchemy queryset
+
+        Returns:
+            List: list of json formated items (page of the queryset)
+        """
+
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+    questions = [question.format() for question in queryset]
+    current_questions = questions[start:end]
+    return current_questions
+
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
@@ -39,9 +59,12 @@ def create_app(test_config=None):
     @app.route('/categories')
     def get_categories():
         categories = Category.query.all()
+        cats = {}
+        for c in categories:
+            cats[c.id] = c.type
         return jsonify(
             {'success': True,
-             "categories": [category.format() for category in categories]})
+             "categories": cats})
 
     '''
     @DONE:
@@ -55,38 +78,22 @@ def create_app(test_config=None):
     ten questions per page and pagination at the bottom of the screen for three pages.
     Clicking on the page numbers should update the questions.
     '''
-    def paginate_questions(request, queryset):
-        """helper function that paginates questions
-        or any queryset that has formate to json method
-
-        Args:
-            request : flask request object
-            queryset : sqlalchemy queryset
-
-        Returns:
-            List: list of json formated items (page of the queryset)
-        """
-
-        page = request.args.get('page', 1, type=int)
-        start = (page - 1) * QUESTIONS_PER_PAGE
-        end = start + QUESTIONS_PER_PAGE
-        questions = [question.format() for question in queryset]
-        current_questions = questions[start:end]
-        return current_questions
 
     @app.route('/questions')
     def get_questions():
         query_set = Question.query.order_by(Question.id).all()
         categories = Category.query.all()
         current_questions = paginate_questions(request, query_set)
-        current_category = Question.query.distinct(Question.category).all()
+        cats = {}
+        for c in categories:
+            cats[c.id] = c.type
         if len(current_questions) == 0:
             abort(404)
         return jsonify({
             'success': True,
             'questions': current_questions,
             'total_questions': len(query_set),
-            'categories': [category.format() for category in categories],
+            'categories': cats,
             'current_category': None
         })
 
@@ -209,10 +216,10 @@ def create_app(test_config=None):
         quiz_category = body.get('quiz_category')
         random_questions = Question.query.filter(
             Question.id.notin_(previous_questions)).order_by(func.random())
-
+        print(quiz_category)
         if quiz_category is not None and previous_questions is not None:
             random_questions = random_questions.filter_by(
-                category=quiz_category)
+                category=quiz_category.get('id'))
 
         random_question = random_questions.first()
 
