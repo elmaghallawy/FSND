@@ -54,7 +54,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['total_questions'])
         self.assertTrue(len(data['questions']))
         self.assertTrue(len(data['categories']))
-        self.assertTrue(len(data['current_category']))
+        self.assertTrue('current_category' in data.keys())
 
     def test_questions_404(self):
         """Test returning a 404 error code when requesting non existed page """
