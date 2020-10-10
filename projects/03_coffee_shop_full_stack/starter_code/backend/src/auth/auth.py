@@ -43,7 +43,7 @@ def get_token_auth_header():
         }, 401)
 
     auth_parts = auth_header.split()
-    if auth_parts[0].lower != 'bearer':
+    if auth_parts[0].lower() != 'bearer':
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Authorization header must start with "Bearer".'
@@ -80,11 +80,11 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code': 'invalid_claims',
             'description': 'permissions not foung in JWT payload'
-        }, 400)
+        }, 401)
     if permission not in payload['permissions']:
         raise AuthError({
             'code': 'unauthorized',
-            'description': 'action is not permitted'}, 403)
+            'description': 'action is not permitted'}, 401)
     return True
 
 
@@ -150,11 +150,11 @@ def verify_decode_jwt(token):
             raise AuthError({
                 'code': 'invalid_header',
                 'description': 'Unable to parse authentication token.'
-            }, 400)
+            }, 401)
     raise AuthError({
         'code': 'invalid_header',
                 'description': 'Unable to find the appropriate key.'
-    }, 400)
+    }, 401)
 
 
 '''
@@ -173,9 +173,12 @@ def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            token = get_token_auth_header()
-            payload = verify_decode_jwt(token)
-            check_permissions(permission, payload)
+            try:
+                token = get_token_auth_header()
+                payload = verify_decode_jwt(token)
+                check_permissions(permission, payload)
+            except AuthError as e:
+                abort(e.status_code)
             return f(payload, *args, **kwargs)
 
         return wrapper
